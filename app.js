@@ -1,11 +1,12 @@
 import { sortTableRows } from "./tableSort.js";
+import { loadSelectedIds, saveSelectedIds } from "./selectionStorage.js";
 
 const DATA_URL = "./data/iit_only_analysis.json";
 const DEFAULT_RANK = 1948;
 
 const state = {
   rows: [],
-  selectedIds: new Set(),
+  selectedIds: loadSelectedIds(),
   tableSort: {
     realistic: { key: "score", direction: "desc" },
     reach: { key: "margin", direction: "desc" },
@@ -139,6 +140,7 @@ function bindEvents() {
 
   els.clearSelected.addEventListener("click", () => {
     state.selectedIds.clear();
+    saveSelectedIds(state.selectedIds);
     render();
   });
 
@@ -304,6 +306,7 @@ function toggleSelected(id) {
   } else {
     state.selectedIds.add(id);
   }
+  saveSelectedIds(state.selectedIds);
   render();
 }
 
@@ -333,6 +336,7 @@ function renderSelected(rank) {
     `;
     li.querySelector("button").addEventListener("click", () => {
       state.selectedIds.delete(row.id);
+      saveSelectedIds(state.selectedIds);
       render();
     });
     els.selectedList.append(li);

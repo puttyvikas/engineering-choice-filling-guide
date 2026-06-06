@@ -46,7 +46,7 @@ button {
 
 .topbar {
   display: grid;
-  grid-template-columns: 1fr 270px;
+  grid-template-columns: 1fr 420px;
   gap: 20px;
   align-items: stretch;
   margin-bottom: 18px;
@@ -96,6 +96,12 @@ h1 {
   box-shadow: var(--shadow);
 }
 
+.rank-stack {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
 .rank-card {
   display: grid;
   align-content: center;
@@ -120,14 +126,14 @@ label,
   border-bottom: 3px solid var(--accent);
   background: transparent;
   color: var(--ink);
-  font-size: 42px;
+  font-size: 36px;
   font-weight: 800;
   outline: none;
 }
 
 .controls {
   display: grid;
-  grid-template-columns: 170px 170px 190px 190px minmax(220px, 1fr) 130px 120px;
+  grid-template-columns: 150px 170px 150px 130px minmax(170px, 1fr) minmax(170px, 1fr) minmax(220px, 1.2fr) 120px 110px;
   gap: 12px;
   align-items: end;
   padding: 14px;
@@ -265,6 +271,14 @@ label,
   background: #1685a7;
 }
 
+.type-dot {
+  background: #1f5d8f;
+}
+
+.quota-dot {
+  background: #64748b;
+}
+
 .college-dot {
   background: #7a4eb0;
 }
@@ -311,14 +325,26 @@ label,
   background: var(--muted);
 }
 
-.chip-branch {
+.chip-branch,
+.chip-instituteType {
   border-color: #a7c6d9;
   background: #eef7fb;
   color: #0d4c6a;
 }
 
-.chip-branch .chip-dot {
+.chip-branch .chip-dot,
+.chip-instituteType .chip-dot {
   background: #1685a7;
+}
+
+.chip-quota {
+  border-color: #c7d0dc;
+  background: #f3f6fa;
+  color: #334155;
+}
+
+.chip-quota .chip-dot {
+  background: #64748b;
 }
 
 .chip-college {
@@ -532,6 +558,45 @@ tbody tr:hover {
   background: #fff;
   padding: 3px 8px;
   white-space: nowrap;
+}
+
+.type-pill {
+  min-width: 54px;
+  justify-content: center;
+  font-weight: 800;
+}
+
+.type-pill.type-iit {
+  border-color: #9fc3e2;
+  background: #eaf5ff;
+  color: #123e63;
+}
+
+.type-pill.type-nit {
+  border-color: #b8d9bd;
+  background: #eef9ef;
+  color: #1f6b3d;
+}
+
+.type-pill.type-iiit {
+  border-color: #d8c2ea;
+  background: #f6effc;
+  color: #67348f;
+}
+
+.type-pill.type-other {
+  border-color: #c7d0dc;
+  background: #f8fafc;
+  color: #334155;
+}
+
+.quota-pill {
+  min-width: 34px;
+  justify-content: center;
+  border-color: #c7d0dc;
+  background: #f8fafc;
+  color: #334155;
+  font-weight: 800;
 }
 
 .buffer-pill {
@@ -803,6 +868,10 @@ tbody tr:hover {
     grid-template-columns: 1fr;
   }
 
+  .rank-stack {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .controls {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -824,6 +893,10 @@ tbody tr:hover {
   }
 
   .controls {
+    grid-template-columns: 1fr;
+  }
+
+  .rank-stack {
     grid-template-columns: 1fr;
   }
 

@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>IIT Choice Dashboard</title>
+    <title>JoSAA Choice Dashboard</title>
     <link rel="icon" href="data:," />
     <link rel="stylesheet" href="./styles.css" />
   </head>
@@ -11,18 +11,24 @@
     <main class="app-shell">
       <section class="topbar">
         <div>
-          <p class="eyebrow">JoSAA IIT Explorer</p>
-          <h1>IIT Choice Dashboard</h1>
+          <p class="eyebrow">JoSAA College Explorer</p>
+          <h1>Choice Dashboard</h1>
           <p class="context">
-            SC category, gender-neutral rows, JoSAA 2025 round 6. Adjust the rank and filters to explore realistic and reach options.
+            SC category, gender-neutral rows, JoSAA 2025 round 6. IIT uses Advanced rank; NIT and IIIT use Main rank.
           </p>
           <p class="guide-link">
             <a href="./guide.html">Read dashboard guide</a>
           </p>
         </div>
-        <div class="rank-card">
-          <label for="rankInput">Candidate SC Rank</label>
-          <input id="rankInput" type="number" min="1" step="1" value="1948" />
+        <div class="rank-stack">
+          <div class="rank-card">
+            <label for="advancedRankInput">Advanced SC Rank</label>
+            <input id="advancedRankInput" type="number" min="1" step="1" value="1948" />
+          </div>
+          <div class="rank-card">
+            <label for="mainRankInput">Main SC Rank</label>
+            <input id="mainRankInput" type="number" min="1" step="1" value="7316" />
+          </div>
         </div>
       </section>
 
@@ -40,6 +46,16 @@
           <button id="chanceFilterButton" class="multi-button" type="button" aria-expanded="false">All buffers</button>
           <div id="chanceFilterPanel" class="multi-panel" hidden></div>
         </div>
+        <div class="control multi-filter" data-filter="instituteType">
+          <span class="control-label">Institute Type</span>
+          <button id="instituteTypeFilterButton" class="multi-button" type="button" aria-expanded="false">All types</button>
+          <div id="instituteTypeFilterPanel" class="multi-panel" hidden></div>
+        </div>
+        <div class="control multi-filter" data-filter="quota">
+          <span class="control-label">Quota</span>
+          <button id="quotaFilterButton" class="multi-button" type="button" aria-expanded="false">All quotas</button>
+          <div id="quotaFilterPanel" class="multi-panel" hidden></div>
+        </div>
         <div class="control multi-filter" data-filter="branch">
           <span class="control-label">Branch</span>
           <button id="branchFilterButton" class="multi-button" type="button" aria-expanded="false">All branches</button>
@@ -47,7 +63,7 @@
         </div>
         <div class="control multi-filter" data-filter="college">
           <span class="control-label">College</span>
-          <button id="collegeFilterButton" class="multi-button" type="button" aria-expanded="false">All IITs</button>
+          <button id="collegeFilterButton" class="multi-button" type="button" aria-expanded="false">All colleges</button>
           <div id="collegeFilterPanel" class="multi-panel" hidden></div>
         </div>
         <div class="control search-control">
@@ -74,6 +90,8 @@
       </section>
 
       <section class="filter-legend" aria-label="Filter legend">
+        <span><i class="legend-dot type-dot"></i> Institute type filters</span>
+        <span><i class="legend-dot quota-dot"></i> Quota filters</span>
         <span><i class="legend-dot branch-dot"></i> Branch filters</span>
         <span><i class="legend-dot college-dot"></i> College filters</span>
         <span><i class="legend-dot chance-dot"></i> Cutoff buffer filters</span>
@@ -85,7 +103,7 @@
         <article>
           <span>Realistic</span>
           <strong id="realisticCount">0</strong>
-          <small>closing rank at or after entered rank</small>
+          <small>closing rank at or after applicable rank</small>
         </article>
         <article>
           <span>Small Buffer</span>
@@ -115,8 +133,11 @@
               <thead>
                 <tr>
                   <th><button class="sort-toggle" type="button" data-sort-table="realistic" data-sort-key="college" data-sort-label="College">College</button></th>
+                  <th><button class="sort-toggle" type="button" data-sort-table="realistic" data-sort-key="instituteType" data-sort-label="Type">Type</button></th>
+                  <th><button class="sort-toggle" type="button" data-sort-table="realistic" data-sort-key="quota" data-sort-label="Quota">Quota</button></th>
                   <th><button class="sort-toggle" type="button" data-sort-table="realistic" data-sort-key="course" data-sort-label="Course">Course</button></th>
                   <th><button class="sort-toggle" type="button" data-sort-table="realistic" data-sort-key="branch" data-sort-label="Branch">Branch</button></th>
+                  <th><button class="sort-toggle" type="button" data-sort-table="realistic" data-sort-key="rankUsed" data-sort-label="Rank">Rank</button></th>
                   <th><button class="sort-toggle" type="button" data-sort-table="realistic" data-sort-key="closing" data-sort-label="Closing">Closing</button></th>
                   <th><button class="sort-toggle" type="button" data-sort-table="realistic" data-sort-key="margin" data-sort-label="Margin">Margin</button></th>
                   <th><button class="sort-toggle" type="button" data-sort-table="realistic" data-sort-key="chance" data-sort-label="Cutoff buffer">Cutoff buffer</button></th>
@@ -140,8 +161,11 @@
               <thead>
                 <tr>
                   <th><button class="sort-toggle" type="button" data-sort-table="reach" data-sort-key="college" data-sort-label="College">College</button></th>
+                  <th><button class="sort-toggle" type="button" data-sort-table="reach" data-sort-key="instituteType" data-sort-label="Type">Type</button></th>
+                  <th><button class="sort-toggle" type="button" data-sort-table="reach" data-sort-key="quota" data-sort-label="Quota">Quota</button></th>
                   <th><button class="sort-toggle" type="button" data-sort-table="reach" data-sort-key="course" data-sort-label="Course">Course</button></th>
                   <th><button class="sort-toggle" type="button" data-sort-table="reach" data-sort-key="branch" data-sort-label="Branch">Branch</button></th>
+                  <th><button class="sort-toggle" type="button" data-sort-table="reach" data-sort-key="rankUsed" data-sort-label="Rank">Rank</button></th>
                   <th><button class="sort-toggle" type="button" data-sort-table="reach" data-sort-key="closing" data-sort-label="Closing">Closing</button></th>
                   <th><button class="sort-toggle" type="button" data-sort-table="reach" data-sort-key="margin" data-sort-label="Gap">Gap</button></th>
                   <th><button class="sort-toggle" type="button" data-sort-table="reach" data-sort-key="chance" data-sort-label="Cutoff gap">Cutoff gap</button></th>
@@ -181,7 +205,7 @@
 
     <template id="emptyRowTemplate">
       <tr>
-        <td colspan="9" class="empty">No options match these filters.</td>
+        <td colspan="12" class="empty">No options match these filters.</td>
       </tr>
     </template>
 

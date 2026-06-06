@@ -12,6 +12,7 @@ function valueForSort(row, key) {
   if (key === "confidence") return Number(row.confidence);
   if (key === "closing") return Number(row.closing);
   if (key === "margin") return Number(row.margin);
+  if (key === "rankUsed") return Number(row.rankUsed);
   if (key === "chance") return chanceRank(row.chance);
   return String(row[key] || "").toLowerCase();
 }

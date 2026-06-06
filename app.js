@@ -5,8 +5,10 @@ import { bufferVisualClass } from "./bufferVisuals.js";
 import { isBtechCourse, isFiveYearDualDegreeCourse } from "./courseFilters.js";
 import { moveSelectedId, selectedRowsInOrder } from "./selectedOrder.js";
 
-const DATA_URL = "./data/iit_only_analysis.json";
-const DEFAULT_RANK = 1948;
+const DATA_URLS = ["../analysis_build/combined_choice_analysis.json", "./data/combined_choice_analysis.json"];
+const DEFAULT_ADVANCED_RANK = 1948;
+const DEFAULT_MAIN_RANK = 7316;
+const FILTER_NAMES = ["chance", "instituteType", "quota", "branch", "college"];
 
 const state = {
   rows: [],
@@ -17,16 +19,23 @@ const state = {
   },
   filters: {
     chance: new Set(),
+    instituteType: new Set(),
+    quota: new Set(),
     branch: new Set(),
     college: new Set(),
   },
 };
 
 const els = {
-  rankInput: document.querySelector("#rankInput"),
+  advancedRankInput: document.querySelector("#advancedRankInput"),
+  mainRankInput: document.querySelector("#mainRankInput"),
   priorityMode: document.querySelector("#priorityMode"),
   chanceFilterButton: document.querySelector("#chanceFilterButton"),
   chanceFilterPanel: document.querySelector("#chanceFilterPanel"),
+  instituteTypeFilterButton: document.querySelector("#instituteTypeFilterButton"),
+  instituteTypeFilterPanel: document.querySelector("#instituteTypeFilterPanel"),
+  quotaFilterButton: document.querySelector("#quotaFilterButton"),
+  quotaFilterPanel: document.querySelector("#quotaFilterPanel"),
   branchFilterButton: document.querySelector("#branchFilterButton"),
   branchFilterPanel: document.querySelector("#branchFilterPanel"),
   collegeFilterButton: document.querySelector("#collegeFilterButton"),
@@ -55,21 +64,32 @@ const els = {
 init();
 
 async function init() {
-  const response = await fetch(DATA_URL);
-  if (!response.ok) {
-    throw new Error(`Could not load dashboard data: ${response.status}`);
-  }
-  const data = await response.json();
+  const data = await loadDashboardData();
   state.rows = data.all_rows.map((row, index) => normalizeRow(row, index));
   populateFilters(state.rows);
   bindEvents();
   render();
 }
 
+async function loadDashboardData() {
+  for (const url of DATA_URLS) {
+    const response = await fetch(url);
+    if (response.ok) {
+      return response.json();
+    }
+  }
+  throw new Error("Could not load dashboard data from local or deploy paths.");
+}
+
 function normalizeRow(row, index) {
   return {
     id: `${row.Institute}|${row["Academic Program Name"]}|${index}`,
-    college: row.Institute.replace("Indian Institute of Technology", "IIT").trim(),
+    instituteType: row["Institute Type"] || "IIT",
+    quota: row.Quota || "AI",
+    quotaNote: row["Quota Note"] || "",
+    rankBasis: row["Rank Basis"] || "JEE Advanced SC",
+    defaultRankUsed: Number(row["Rank Used"]),
+    college: shortCollegeName(row.Institute),
     fullCollege: row.Institute,
     course: row["Academic Program Name"],
     branch: row["Branch Group"],
@@ -85,6 +105,11 @@ function normalizeRow(row, index) {
 
 function populateFilters(rows) {
   renderMultiFilter("chance", CHANCE_LABELS);
+  renderMultiFilter("instituteType", ["IIT", "NIT", "IIIT"]);
+  renderMultiFilter(
+    "quota",
+    unique(rows.map((row) => row.quota)).sort(),
+  );
   renderMultiFilter(
     "branch",
     unique(rows.map((row) => row.branch)).sort(),
@@ -120,14 +145,15 @@ function renderMultiFilter(filterName, values) {
 
 function bindEvents() {
   [
-    els.rankInput,
+    els.advancedRankInput,
+    els.mainRankInput,
     els.priorityMode,
     els.searchInput,
     els.showOnlyBtech,
     els.showOnlyDualDegree,
   ].forEach((element) => element.addEventListener("input", render));
 
-  ["chance", "branch", "college"].forEach((filterName) => {
+  FILTER_NAMES.forEach((filterName) => {
     const button = els[`${filterName}FilterButton`];
     const panel = els[`${filterName}FilterPanel`];
     button.addEventListener("click", () => togglePanel(filterName));
@@ -158,22 +184,22 @@ function bindEvents() {
 }
 
 function render() {
-  const rank = currentRank();
-  const rows = filteredRows(rank);
-  const sorted = rows.toSorted((a, b) => sortValue(b, rank) - sortValue(a, rank));
-  const realistic = sorted.filter((row) => margin(row, rank) >= 0);
+  const ranks = currentRanks();
+  const rows = filteredRows(ranks);
+  const sorted = [...rows].sort((a, b) => sortValue(b, ranks) - sortValue(a, ranks));
+  const realistic = sorted.filter((row) => margin(row, ranks) >= 0);
   const reaches = sorted.filter((row) => {
-    const rowMargin = margin(row, rank);
+    const rowMargin = margin(row, ranks);
     return rowMargin < 0 && rowMargin >= -650;
   });
   const closeReaches = rows.filter((row) => {
-    const rowMargin = margin(row, rank);
+    const rowMargin = margin(row, ranks);
     return rowMargin < 0 && rowMargin >= -300;
   });
 
   els.realisticCount.textContent = realistic.length;
   els.borderlineCount.textContent = rows.filter((row) => {
-    const rowMargin = margin(row, rank);
+    const rowMargin = margin(row, ranks);
     return rowMargin >= 0 && rowMargin <= 150;
   }).length;
   els.reachCount.textContent = closeReaches.length;
@@ -185,23 +211,25 @@ function render() {
   els.realisticLabel.textContent = `${realistic.length} rows`;
   els.reachLabel.textContent = `${reaches.length} rows`;
 
-  renderTable(els.realisticTable, sortRowsForTable(realistic, rank, "realistic").slice(0, 80), rank);
-  renderTable(els.reachTable, sortRowsForTable(reaches, rank, "reach").slice(0, 60), rank);
+  renderTable(els.realisticTable, sortRowsForTable(realistic, ranks, "realistic").slice(0, 80), ranks);
+  renderTable(els.reachTable, sortRowsForTable(reaches, ranks, "reach").slice(0, 60), ranks);
   updateSortButtons();
   renderChips();
-  renderSelected(rank);
+  renderSelected(ranks);
   renderBranchMix(realistic);
 }
 
-function sortRowsForTable(rows, rank, tableName) {
+function sortRowsForTable(rows, ranks, tableName) {
   const withSortValues = rows.map((row) => {
-    const rowMargin = margin(row, rank);
+    const rankUsed = rowRank(row, ranks);
+    const rowMargin = margin(row, ranks);
     return {
       ...row,
+      rankUsed,
       margin: rowMargin,
       chance: classifyChance(rowMargin),
       confidence: confidenceScore(rowMargin),
-      score: sortValue(row, rank),
+      score: sortValue(row, ranks),
     };
   });
   return sortTableRows(withSortValues, state.tableSort[tableName]);
@@ -224,47 +252,65 @@ function updateSortButtons() {
   });
 }
 
-function currentRank() {
-  const parsed = Number(els.rankInput.value);
-  return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : DEFAULT_RANK;
+function currentRanks() {
+  return {
+    advanced: rankFromInput(els.advancedRankInput, DEFAULT_ADVANCED_RANK),
+    main: rankFromInput(els.mainRankInput, DEFAULT_MAIN_RANK),
+  };
 }
 
-function filteredRows(rank) {
+function rankFromInput(input, fallback) {
+  const parsed = Number(input.value);
+  return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : fallback;
+}
+
+function filteredRows(ranks) {
   const query = els.searchInput.value.trim().toLowerCase();
 
   return state.rows.filter((row) => {
-    const rowChance = classifyChance(margin(row, rank));
+    const rowChance = classifyChance(margin(row, ranks));
     const btechOk = !els.showOnlyBtech.checked || isBtechCourse(row.course);
     const dualDegreeOk = !els.showOnlyDualDegree.checked || isFiveYearDualDegreeCourse(row.course);
     const chanceOk = state.filters.chance.size === 0 || state.filters.chance.has(rowChance);
+    const typeOk = state.filters.instituteType.size === 0 || state.filters.instituteType.has(row.instituteType);
+    const quotaOk = state.filters.quota.size === 0 || state.filters.quota.has(row.quota);
     const branchOk = state.filters.branch.size === 0 || state.filters.branch.has(row.branch);
     const collegeOk = state.filters.college.size === 0 || state.filters.college.has(row.college);
     const searchOk =
       query.length === 0 ||
       row.course.toLowerCase().includes(query) ||
-      row.college.toLowerCase().includes(query);
+      row.college.toLowerCase().includes(query) ||
+      row.instituteType.toLowerCase().includes(query) ||
+      row.quota.toLowerCase().includes(query);
 
-    return btechOk && dualDegreeOk && chanceOk && branchOk && collegeOk && searchOk;
+    return btechOk && dualDegreeOk && chanceOk && typeOk && quotaOk && branchOk && collegeOk && searchOk;
   });
 }
 
-function sortValue(row, rank) {
-  const rowMargin = margin(row, rank);
+function sortValue(row, ranks) {
+  const rowMargin = margin(row, ranks);
   const confidence = confidenceScore(rowMargin);
   if (els.priorityMode.value === "branch") {
-    return row.branchScore * 0.56 + row.instituteScore * 0.32 + confidence * 0.12;
+    return row.branchScore * 0.56 + row.instituteScore * 0.3 + confidence * 0.14;
   }
   if (els.priorityMode.value === "safety") {
     return confidence * 0.58 + row.instituteScore * 0.26 + row.branchScore * 0.16;
   }
-  return row.instituteScore * 0.72 + row.branchScore * 0.2 + confidence * 0.08;
+  return row.instituteScore * 0.7 + row.branchScore * 0.2 + confidence * 0.1;
 }
 
-function margin(row, rank) {
-  return row.closing - rank;
+function margin(row, ranks) {
+  return row.closing - rowRank(row, ranks);
 }
 
-function renderTable(target, rows, rank) {
+function rowRank(row, ranks) {
+  if (row.instituteType === "IIT") {
+    return ranks.advanced;
+  }
+  return ranks.main;
+}
+
+function renderTable(target, rows, ranks) {
   target.innerHTML = "";
   if (rows.length === 0) {
     target.append(document.querySelector("#emptyRowTemplate").content.cloneNode(true));
@@ -272,18 +318,22 @@ function renderTable(target, rows, rank) {
   }
 
   for (const row of rows) {
-    const rowMargin = margin(row, rank);
+    const rankUsed = rowRank(row, ranks);
+    const rowMargin = margin(row, ranks);
     const chance = classifyChance(rowMargin);
     const tr = document.createElement("tr");
     tr.innerHTML = `
       <td class="college">${escapeHtml(row.college)}</td>
+      <td><span class="pill type-pill ${typePillClass(row.instituteType)}">${escapeHtml(row.instituteType)}</span></td>
+      <td><span class="pill quota-pill" title="${escapeHtml(row.quotaNote)}">${escapeHtml(row.quota)}</span></td>
       <td class="course">${escapeHtml(trimCourse(row.course))}</td>
       <td><span class="pill">${escapeHtml(row.branch)}</span></td>
+      <td><span title="${escapeHtml(row.rankBasis)}">${rankUsed}</span></td>
       <td>${row.closing}</td>
       <td class="${rowMargin >= 0 ? "margin-positive" : "margin-negative"}">${formatMargin(rowMargin)}</td>
       <td><span class="pill buffer-pill ${bufferVisualClass(chance)}">${chance}</span></td>
       <td><span class="confidence ${bufferVisualClass(chance)}">${confidenceScore(rowMargin)}%</span></td>
-      <td>${sortValue(row, rank).toFixed(1)}</td>
+      <td>${sortValue(row, ranks).toFixed(1)}</td>
       <td><button class="select-btn ${state.selectedIds.has(row.id) ? "active" : ""}" type="button" data-id="${escapeHtml(row.id)}">${state.selectedIds.has(row.id) ? "Added" : "Add"}</button></td>
     `;
     tr.querySelector("button").addEventListener("click", () => toggleSelected(row.id));
@@ -301,7 +351,7 @@ function toggleSelected(id) {
   render();
 }
 
-function renderSelected(rank) {
+function renderSelected(ranks) {
   els.selectedList.innerHTML = "";
   const selected = selectedRowsInOrder(state.selectedIds, state.rows);
   els.selectedCount.textContent = selected.length;
@@ -314,11 +364,12 @@ function renderSelected(rank) {
   }
 
   selected.forEach((row, index) => {
-    const rowMargin = margin(row, rank);
+    const rowMargin = margin(row, ranks);
+    const rankUsed = rowRank(row, ranks);
     const li = document.createElement("li");
     li.innerHTML = `
       <strong>${index + 1}. ${escapeHtml(row.college)} - ${escapeHtml(trimCourse(row.course))}</strong>
-      <small>${row.branch} | closing ${row.closing} | margin ${formatMargin(rowMargin)} | ${classifyChance(rowMargin)} | buffer ${confidenceScore(rowMargin)}%</small>
+      <small>${row.instituteType} | ${row.quota} | ${row.branch} | ${row.rankBasis} ${rankUsed} | closing ${row.closing} | margin ${formatMargin(rowMargin)} | ${classifyChance(rowMargin)} | buffer ${confidenceScore(rowMargin)}%</small>
       <div class="choice-actions">
         <button class="move-choice" type="button" data-action="up" ${index === 0 ? "disabled" : ""}>Up</button>
         <button class="move-choice" type="button" data-action="down" ${index === selected.length - 1 ? "disabled" : ""}>Down</button>
@@ -352,7 +403,7 @@ function reorderSelected(id, targetIndex) {
 function renderChips() {
   els.activeChips.innerHTML = "";
   const chips = [];
-  for (const filterName of ["chance", "branch", "college"]) {
+  for (const filterName of FILTER_NAMES) {
     for (const value of state.filters[filterName]) {
       chips.push({ type: filterName, value });
     }
@@ -404,6 +455,8 @@ function removeChip(chip) {
 function labelForFilter(type) {
   if (type === "btech") return "Type";
   if (type === "dual") return "Type";
+  if (type === "instituteType") return "Institute";
+  if (type === "quota") return "Quota";
   if (type === "chance") return "Cutoff";
   return type.charAt(0).toUpperCase() + type.slice(1);
 }
@@ -417,7 +470,7 @@ function togglePanel(filterName) {
 }
 
 function closePanels() {
-  ["chance", "branch", "college"].forEach((filterName) => {
+  FILTER_NAMES.forEach((filterName) => {
     els[`${filterName}FilterPanel`].hidden = true;
     els[`${filterName}FilterButton`].setAttribute("aria-expanded", "false");
   });
@@ -425,8 +478,10 @@ function closePanels() {
 
 function updateFilterButtons() {
   setButtonLabel("chance", "All buffers");
+  setButtonLabel("instituteType", "All types");
+  setButtonLabel("quota", "All quotas");
   setButtonLabel("branch", "All branches");
-  setButtonLabel("college", "All IITs");
+  setButtonLabel("college", "All colleges");
 }
 
 function setButtonLabel(filterName, emptyLabel) {
@@ -443,12 +498,14 @@ function syncPanelCheckboxes(filterName) {
 }
 
 function syncAllPanels() {
-  ["chance", "branch", "college"].forEach(syncPanelCheckboxes);
+  FILTER_NAMES.forEach(syncPanelCheckboxes);
   updateFilterButtons();
 }
 
 function clearFilters() {
   state.filters.chance.clear();
+  state.filters.instituteType.clear();
+  state.filters.quota.clear();
   state.filters.branch.clear();
   state.filters.college.clear();
   els.searchInput.value = "";
@@ -460,6 +517,7 @@ function clearFilters() {
 function applyPreset(preset) {
   clearFilters();
   if (preset === "top-brand") {
+    state.filters.instituteType.add("IIT");
     ["IIT Bombay", "IIT Delhi", "IIT Madras", "IIT Kanpur", "IIT Kharagpur", "IIT Roorkee", "IIT Guwahati"].forEach((college) =>
       state.filters.college.add(college),
     );
@@ -484,18 +542,19 @@ function applyPreset(preset) {
   render();
 }
 
-function selectedRows(rank = currentRank()) {
+function selectedRows() {
   return selectedRowsInOrder(state.selectedIds, state.rows);
 }
 
 async function copySelectedChoices() {
-  const rank = currentRank();
-  const rows = selectedRows(rank);
+  const ranks = currentRanks();
+  const rows = selectedRows();
   const text = rows.length
     ? rows
         .map((row, index) => {
-          const rowMargin = margin(row, rank);
-          return `${index + 1}. ${row.college} - ${trimCourse(row.course)} | ${row.branch} | closing ${row.closing} | margin ${formatMargin(rowMargin)} | ${classifyChance(rowMargin)} | buffer ${confidenceScore(rowMargin)}%`;
+          const rowMargin = margin(row, ranks);
+          const rankUsed = rowRank(row, ranks);
+          return `${index + 1}. ${row.college} - ${trimCourse(row.course)} | ${row.instituteType} | ${row.quota} | ${row.branch} | ${row.rankBasis} ${rankUsed} | closing ${row.closing} | margin ${formatMargin(rowMargin)} | ${classifyChance(rowMargin)} | buffer ${confidenceScore(rowMargin)}%`;
         })
         .join("\n")
     : "No choices selected.";
@@ -507,19 +566,20 @@ async function copySelectedChoices() {
 }
 
 function downloadSelectedChoices() {
-  const rank = currentRank();
-  const rows = selectedRows(rank);
-  const header = ["Order", "College", "Course", "Branch", "Closing Rank", "Margin", "Cutoff Buffer", "Buffer %"];
+  const ranks = currentRanks();
+  const rows = selectedRows();
+  const header = ["Order", "Institute Type", "College", "Quota", "Course", "Branch", "Rank Basis", "Rank Used", "Closing Rank", "Margin", "Cutoff Buffer", "Buffer %"];
   const body = rows.map((row, index) => {
-    const rowMargin = margin(row, rank);
-    return [index + 1, row.college, trimCourse(row.course), row.branch, row.closing, rowMargin, classifyChance(rowMargin), `${confidenceScore(rowMargin)}%`];
+    const rowMargin = margin(row, ranks);
+    const rankUsed = rowRank(row, ranks);
+    return [index + 1, row.instituteType, row.college, row.quota, trimCourse(row.course), row.branch, row.rankBasis, rankUsed, row.closing, rowMargin, classifyChance(rowMargin), `${confidenceScore(rowMargin)}%`];
   });
   const csv = [header, ...body].map((line) => line.map(csvCell).join(",")).join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `iit-selected-choices-rank-${rank}.csv`;
+  link.download = `josaa-selected-choices-advanced-${ranks.advanced}-main-${ranks.main}.csv`;
   document.body.append(link);
   link.click();
   link.remove();
@@ -536,7 +596,7 @@ function renderBranchMix(realistic) {
   for (const row of realistic) {
     counts.set(row.branch, (counts.get(row.branch) || 0) + 1);
   }
-  const rows = [...counts.entries()].toSorted((a, b) => b[1] - a[1]).slice(0, 10);
+  const rows = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10);
   const max = Math.max(1, ...rows.map(([, count]) => count));
 
   if (rows.length === 0) {
@@ -560,8 +620,29 @@ function trimCourse(course) {
   return course.replace(/\s*\([^)]*Years,?\s*/i, " (").replace("Bachelor of Technology", "B.Tech").replace("Bachelor of Science", "BS");
 }
 
+function shortCollegeName(college) {
+  return String(college)
+    .replace("Indian Institute of Technology", "IIT")
+    .replace("National Institute of Technology", "NIT")
+    .replace("Indian Institute of Information Technology", "IIIT")
+    .replace("INDIAN INSTITUTE OF INFORMATION TECHNOLOGY", "IIIT")
+    .replace("Indian institute of information technology", "IIIT")
+    .replace("Atal Bihari Vajpayee IIIT and Management", "ABV-IIITM")
+    .replace("Pt. Dwarka Prasad Mishra IIIT,", "IIIT")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function formatMargin(value) {
   return value > 0 ? `+${value}` : String(value);
+}
+
+function typePillClass(type) {
+  const normalized = String(type).toLowerCase();
+  if (normalized === "iit") return "type-iit";
+  if (normalized === "nit") return "type-nit";
+  if (normalized === "iiit") return "type-iiit";
+  return "type-other";
 }
 
 function unique(values) {

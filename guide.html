@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>IIT Choice Dashboard Guide</title>
+    <title>JoSAA Choice Dashboard Guide</title>
     <link rel="icon" href="data:," />
     <link rel="stylesheet" href="./styles.css" />
   </head>
@@ -14,23 +14,29 @@
       </nav>
       <article class="guide-page">
         <p class="eyebrow">Dashboard Guide</p>
-        <h1>IIT Choice Dashboard Guide</h1>
+        <h1>JoSAA Choice Dashboard Guide</h1>
         <p class="context">
           Use this page to understand the data source, filters, tables, and column meanings before filling JoSAA choices.
         </p>
 
         <h2>Data Source</h2>
         <p>
-          The dashboard uses IIT-only data from <strong>IIT colleges.xlsx</strong>, processed into
-          <strong>analysis_build/iit_only_analysis.json</strong>. It includes only IIT rows where
-          <strong>Seat Type = SC</strong> and <strong>Gender = Gender-Neutral</strong>.
+          The dashboard uses <strong>IIT colleges.xlsx</strong>, <strong>NIT colleges.xlsx</strong>, and
+          <strong>III-T Colleges.xlsx</strong>, processed into <strong>analysis_build/combined_choice_analysis.json</strong>.
+          It includes only rows where <strong>Seat Type = SC</strong> and <strong>Gender = Gender-Neutral</strong>.
+          Female-only supernumerary rows are excluded because the candidate is male.
+        </p>
+        <p>
+          IIT rows use <strong>JEE Advanced SC rank 1948</strong>. NIT and IIIT rows use
+          <strong>JEE Main SC rank 7316</strong>. For NITs, the default applicable quota set is
+          <strong>OS rows plus NIT Warangal HS rows</strong>, because the candidate's state of eligibility is Telangana.
         </p>
 
         <h2>How To Use</h2>
         <ol>
-          <li>Enter the candidate's SC rank in <strong>Candidate SC Rank</strong>.</li>
+          <li>Use <strong>Advanced SC Rank</strong> for IIT calculations and <strong>Main SC Rank</strong> for NIT/IIIT calculations.</li>
           <li>Choose <strong>College first</strong>, <strong>Branch first</strong>, or <strong>Safety first</strong>.</li>
-          <li>Use the chance, branch, and college dropdowns to select one or many values.</li>
+          <li>Use institute type, quota, cutoff buffer, branch, and college dropdowns to select one or many values.</li>
           <li>Filter by search text, BTech-only rows, or 5-year Dual Degree rows.</li>
           <li>Remove individual filters by clicking active filter chips.</li>
           <li>Use presets for common views such as Top IIT brand, Circuit branches, Safe choices, and Cutoff gaps.</li>
@@ -41,7 +47,7 @@
         <h2>Tables</h2>
         <dl>
           <dt>Top Realistic Options</dt>
-          <dd>Rows where Closing Rank is greater than or equal to the entered candidate rank.</dd>
+          <dd>Rows where Closing Rank is greater than or equal to the applicable candidate rank for that institute type.</dd>
           <dt>Worthwhile Reaches</dt>
           <dd>Rows that missed last year's cutoff, but may be worth placing above realistic choices.</dd>
           <dt>Selected Choices</dt>
@@ -53,7 +59,11 @@
         <h2>Column Glossary</h2>
         <dl>
           <dt>College</dt>
-          <dd>The IIT name.</dd>
+          <dd>The institute name, shortened for readability.</dd>
+          <dt>Type</dt>
+          <dd>The institute type: IIT, NIT, or IIIT.</dd>
+          <dt>Quota</dt>
+          <dd>The JoSAA quota row used. IIT and IIIT rows are AI. NIT rows are OS, plus NIT Warangal HS for Telangana.</dd>
           <dt>Course</dt>
           <dd>The academic program name, such as Electrical Engineering, Chemistry, or Design.</dd>
           <dt>Branch</dt>
@@ -62,8 +72,8 @@
           <dd>The first rank allotted that program in the selected category and gender row.</dd>
           <dt>Closing Rank</dt>
           <dd>The last rank allotted that program in JoSAA 2025 Round 6 for the selected row.</dd>
-          <dt>Candidate Rank</dt>
-          <dd>The rank entered in the dashboard and used for recalculation.</dd>
+          <dt>Rank</dt>
+          <dd>The candidate rank used for that row. IIT rows use Advanced SC rank; NIT and IIIT rows use Main SC rank.</dd>
           <dt>Margin</dt>
           <dd>Closing Rank minus Candidate Rank. Positive means inside last year's cutoff; negative means a reach.</dd>
           <dt>Gap</dt>
@@ -73,7 +83,7 @@
           <dt>Buffer %</dt>
           <dd>Heuristic cushion score based on cutoff margin. Higher means more cushion versus last year's closing rank, not an official guarantee.</dd>
           <dt>Institute Score</dt>
-          <dd>Advisory score for IIT reputation used in sorting.</dd>
+          <dd>Advisory score for institute reputation used in sorting.</dd>
           <dt>Branch Score</dt>
           <dd>Advisory score for branch demand used in sorting.</dd>
           <dt>Score</dt>

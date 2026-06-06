@@ -1,239 +1,83 @@
-# IIT Choice Dashboard Guide
+# JoSAA Choice Dashboard Guide
 
-This dashboard helps explore IIT choices for a male SC candidate using JoSAA 2025 Round 6 opening and closing rank data.
+This dashboard helps compare IIT, NIT, and IIIT choices for a male SC candidate using JoSAA 2025 Round 6 opening and closing rank data.
 
 ## Data Source
 
-The dashboard uses:
-
-- Source workbook: `IIT colleges.xlsx`
-- Processed data: `analysis_build/iit_only_analysis.json`
-- Rows included: IIT colleges only
+- IIT source: `IIT colleges.xlsx`
+- NIT source: `NIT colleges.xlsx`
+- IIIT source: `III-T Colleges.xlsx`
+- Processed data: `analysis_build/combined_choice_analysis.json`
 - Seat type/category: `SC`
 - Gender rows: `Gender-Neutral`
 
-It does not use NIT, IIIT, or other institute rows.
+Female-only supernumerary rows are excluded because the candidate is male.
+
+## Rank Rules
+
+- IIT rows use JEE Advanced SC rank `1948`.
+- NIT and IIIT rows use JEE Main SC rank `7316`.
+- NIT quota defaults to applicable rows only: `OS` plus `HS` rows for NIT Warangal because the candidate's state of eligibility is Telangana.
 
 ## How To Use
 
-1. Open the dashboard:
-   `http://localhost:8765/dashboard/`
-
-2. Enter the candidate's SC rank in `Candidate SC Rank`.
-   The dashboard recalculates margins and chance labels immediately.
-
-3. Choose a priority mode:
-   - `College first`: prioritizes IIT reputation more than branch.
-   - `Branch first`: prioritizes CSE, AI/Data, Math/Computing, Electronics, and Electrical more strongly.
-   - `Safety first`: prioritizes choices with larger cutoff cushion.
-
-4. Use filters:
-   - `Chance`: choose one or more chance labels.
-   - `Branch`: choose one or more branch groups such as Electrical, CSE, Design, Civil, etc.
-   - `College`: choose one or more IITs.
-   - `Search`: search by college or course name.
-   - `BTech only`: hide BS, dual-degree science, architecture, and other non-BTech rows.
-   - `5Y dual`: show only courses whose name includes both 5 Years and Dual Degree.
-
-5. Use active filter chips to remove individual filters quickly.
-
-6. Use quick presets:
-   - `Top IIT brand`: focuses on older/top IITs and uses college-first sorting.
-   - `Circuit branches`: focuses on CSE, AI/Data, Math/Computing, Electronics, and Electrical.
-   - `BTech only`: enables BTech-only rows.
-   - `5Y dual`: filters to 5-year Dual Degree rows.
-   - `Safe choices`: shows likely and good-chance rows.
-   - `Cutoff gaps`: shows rows with small cutoff gaps.
-   - `Reset filters`: clears all filters.
-
-7. Use `Add` to place options into the `Selected Choices` list for comparison.
-   This does not change the source data or spreadsheet.
-
+1. Open the dashboard locally at `http://localhost:8765/dashboard/`.
+2. Adjust `Advanced SC Rank` for IIT calculations.
+3. Adjust `Main SC Rank` for NIT and IIIT calculations.
+4. Use `Institute Type` to view IIT-only, NIT-only, IIIT-only, or combined options.
+5. Use `Quota`, `Cutoff buffer`, `Branch`, `College`, search, `BTech only`, and `5Y dual` filters to narrow the list.
+6. Use `Add` to collect options in `Selected Choices`.
+7. Reorder selected choices with `Up`, `Down`, or `Move to`.
 8. Use `Copy list` or `Download CSV` to export selected choices.
 
-## What Each Table Means
+## Tables
 
 ### Top Realistic Options
 
-This table shows choices where:
+Rows where:
 
-`Closing Rank >= Candidate SC Rank`
+`Closing Rank >= Rank Used`
 
-These are the options that would have been available based on the previous year's Round 6 closing rank, after applying your filters.
-
-Important: this is not a guarantee for 2026. JoSAA cutoffs can move each year.
+For IIT rows, `Rank Used` is the Advanced SC rank. For NIT/IIIT rows, `Rank Used` is the Main SC rank.
 
 ### Worthwhile Reaches
 
-This table shows choices where:
+Rows where:
 
-`Closing Rank < Candidate SC Rank`
+`Closing Rank < Rank Used`
 
-These missed the previous year's cutoff, but may still be worth placing above realistic options in the JoSAA preference list. There is usually no downside to listing aspirational choices above safer choices, because JoSAA checks choices from top to bottom.
+These missed last year's cutoff but may still be worth listing above realistic choices if the candidate truly prefers them.
 
 ### Selected Choices
 
-This is a temporary comparison list. Use it to collect choices you are considering.
-
-The selected list is only inside the browser session. Refreshing the page may clear it.
-
-You can:
-
-- Remove individual choices.
-- Clear all choices.
-- Copy the list as text.
-- Download the list as CSV.
+A browser-side list of choices you add from the tables. It persists in local storage until cleared.
 
 ### Branch Mix
 
-This shows the number of visible realistic options by branch group after applying the current filters.
-
-It helps answer questions like:
-
-- Are there many realistic Electrical options?
-- Are most realistic options science branches?
-- Does BTech-only filtering remove too many choices?
+Counts visible realistic options by simplified branch group after the current filters.
 
 ## Column Glossary
 
-### College
+- `College`: Short institute name.
+- `Type`: IIT, NIT, or IIIT.
+- `Quota`: JoSAA quota row used, such as AI, OS, or applicable HS.
+- `Course`: Academic program name.
+- `Branch`: Simplified branch group for filtering.
+- `Rank`: Candidate rank used for that row.
+- `Closing`: Last rank allotted in JoSAA 2025 Round 6 for that row.
+- `Margin`: `Closing Rank - Rank Used`; positive means inside last year's cutoff.
+- `Cutoff buffer`: Human-readable cushion or gap label.
+- `Buffer %`: Heuristic cushion score based on last year's cutoff margin, not an official probability.
+- `Score`: Active sorting score based on college-first, branch-first, or safety-first mode.
 
-The IIT name.
+## Counselling Note
 
-Example: `IIT Delhi`, `IIT Bombay`, `IIT Kharagpur`.
-
-### Course
-
-The academic program name.
-
-Example: `Electrical Engineering (B.Tech)`, `Chemistry (BS)`, `Design (B.Tech)`.
-
-### Branch
-
-A simplified branch group created for easier filtering.
-
-Examples:
-
-- `CSE`
-- `AI / Data`
-- `Math / Computing`
-- `Electronics`
-- `Electrical`
-- `Mechanical / Manufacturing`
-- `Science - Chemistry`
-- `Science - Physics`
-- `Design`
-- `Civil`
-
-### Opening Rank
-
-The first rank at which the program was allotted in the selected category/gender data.
-
-Lower opening rank usually means higher demand, but opening rank is less important than closing rank for eligibility estimation.
-
-### Closing Rank
-
-The last rank that received the seat in JoSAA 2025 Round 6 for the selected category/gender row.
-
-For this dashboard, closing rank is compared against the entered SC rank.
-
-### Candidate Rank
-
-The rank being used for comparison.
-
-Default value: `1948`.
-
-If you change the rank input, the dashboard recalculates margins and chance labels.
-
-### Margin
-
-Calculated as:
-
-`Closing Rank - Candidate Rank`
-
-Examples:
-
-- Closing Rank `2164`, Candidate Rank `1948`, Margin `+216`
-  Means the candidate rank is inside last year's cutoff by 216 ranks.
-
-- Closing Rank `1908`, Candidate Rank `1948`, Margin `-40`
-  Means the candidate missed last year's cutoff by 40 ranks.
-
-### Gap
-
-In the reach table, the margin is shown as a gap.
-
-Negative gap means the candidate rank is worse than last year's closing rank.
-
-### Cutoff Buffer / Gap
-
-A simple label based on margin. Buffer means the candidate rank is inside last year's closing rank; gap means it missed last year's closing rank.
-
-- `Large cutoff buffer`: margin greater than 600, buffer 92%
-- `Medium cutoff buffer`: margin from 151 to 600, buffer 75%
-- `Small cutoff buffer`: margin from 0 to 150, buffer 55%
-- `Small cutoff gap`: margin from -1 to -300, buffer 35%
-- `Medium cutoff gap`: margin from -301 to -800, buffer 20%
-- `Large cutoff gap`: margin below -800, buffer 5%
-
-The buffer percentage is based only on previous-year cutoff margin. It is not an official JoSAA probability.
-
-### Institute Score
-
-A dashboard scoring value that gives more weight to older or stronger IIT brands.
-
-It is used for sorting, not for official admissions.
-
-### Branch Score
-
-A dashboard scoring value that gives more weight to higher-demand branches like CSE, AI/Data, Math/Computing, Electronics, and Electrical.
-
-It is used for sorting, not for official admissions.
-
-### College First Score
-
-The score used when priority mode is `College first`.
-
-It gives most weight to the IIT brand, then branch, then cutoff safety.
-
-### Branch First Score
-
-The score used when priority mode is `Branch first`.
-
-It gives most weight to branch, then IIT brand, then cutoff safety.
-
-### Score
-
-The active sorting score shown in the table.
-
-It changes depending on the selected priority mode:
-
-- `College first`
-- `Branch first`
-- `Safety first`
-
-### Recommendation Note
-
-A short explanation created during analysis to help interpret a row.
-
-It may mention whether an option is realistic, aspirational, or useful for a specific strategy.
-
-## Important Counselling Notes
-
-JoSAA choice filling should usually be ordered by true preference, not by probability.
-
-That means:
-
-- Put dream/reach choices above realistic choices.
-- Put realistic choices below them.
-- Put safe choices below realistic choices.
-
-If a higher preference is not available, JoSAA moves to the next preference. Listing a reach choice above a realistic choice does not reduce the chance of getting the realistic choice.
+JoSAA choices should usually be ordered by true preference, not just probability. Put dream choices above realistic choices and safe choices below them. JoSAA scans from top to bottom and gives the highest available option.
 
 ## Limitations
 
-- The dashboard uses JoSAA 2025 Round 6 data.
-- 2026 cutoffs can change due to seats, demand, policy changes, and candidate behavior.
-- The scoring system is advisory, not official.
-- Branch grouping is simplified for easier filtering.
+- Uses JoSAA 2025 Round 6 data.
+- 2026 cutoffs can change.
+- Scoring is advisory, not official.
+- Branch grouping and institute scoring are simplified for decision support.
 - Always verify final choices against official JoSAA 2026 data before submitting.

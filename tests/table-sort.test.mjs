@@ -2,9 +2,9 @@ import assert from "node:assert/strict";
 import { sortTableRows } from "../tableSort.js";
 
 const rows = [
-  { college: "IIT B", course: "Physics", branch: "Science", closing: 2840, score: 72, confidence: 92, margin: 892, chance: "Large cutoff buffer" },
-  { college: "IIT A", course: "Chemistry", branch: "Chemical", closing: 1359, score: 91, confidence: 20, margin: -589, chance: "Medium cutoff gap" },
-  { college: "IIT C", course: "Economics", branch: "Economics", closing: 1877, score: 83, confidence: 35, margin: -71, chance: "Small cutoff gap" },
+  { college: "IIT B", course: "Physics", branch: "Science", closing: 2840, rankUsed: 1948, score: 72, confidence: 92, margin: 892, chance: "Large cutoff buffer" },
+  { college: "IIT A", course: "Chemistry", branch: "Chemical", closing: 1359, rankUsed: 7316, score: 91, confidence: 20, margin: -589, chance: "Medium cutoff gap" },
+  { college: "IIT C", course: "Economics", branch: "Economics", closing: 1877, rankUsed: 10000, score: 83, confidence: 35, margin: -71, chance: "Small cutoff gap" },
 ];
 
 assert.deepEqual(
@@ -25,6 +25,11 @@ assert.deepEqual(
 assert.deepEqual(
   sortTableRows(rows, { key: "score", direction: "desc" }).map((row) => row.score),
   [91, 83, 72],
+);
+
+assert.deepEqual(
+  sortTableRows(rows, { key: "rankUsed", direction: "asc" }).map((row) => row.rankUsed),
+  [1948, 7316, 10000],
 );
 
 assert.deepEqual(

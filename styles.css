@@ -479,6 +479,31 @@ td {
   vertical-align: top;
 }
 
+.sort-toggle {
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 900;
+  padding: 0;
+  white-space: nowrap;
+  opacity: 0.78;
+}
+
+.sort-toggle.active {
+  color: var(--accent-strong);
+  opacity: 1;
+}
+
+.sort-toggle:hover,
+.sort-toggle:focus-visible {
+  color: var(--accent-strong);
+  opacity: 1;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 td {
   border-bottom: 1px solid #edf1f6;
 }

@@ -1,9 +1,15 @@
+import { sortTableRows } from "./tableSort.js";
+
 const DATA_URL = "./data/iit_only_analysis.json";
 const DEFAULT_RANK = 1948;
 
 const state = {
   rows: [],
   selectedIds: new Set(),
+  tableSort: {
+    realistic: { key: "score", direction: "desc" },
+    reach: { key: "margin", direction: "desc" },
+  },
   filters: {
     chance: new Set(),
     branch: new Set(),
@@ -138,6 +144,9 @@ function bindEvents() {
 
   els.copySelected.addEventListener("click", copySelectedChoices);
   els.downloadSelected.addEventListener("click", downloadSelectedChoices);
+  document.querySelectorAll("[data-sort-table][data-sort-key]").forEach((button) => {
+    button.addEventListener("click", () => updateTableSort(button.dataset.sortTable, button.dataset.sortKey));
+  });
 }
 
 function render() {
@@ -168,11 +177,42 @@ function render() {
   els.realisticLabel.textContent = `${realistic.length} rows`;
   els.reachLabel.textContent = `${reaches.length} rows`;
 
-  renderTable(els.realisticTable, realistic.slice(0, 80), rank);
-  renderTable(els.reachTable, reaches.slice(0, 60), rank);
+  renderTable(els.realisticTable, sortRowsForTable(realistic, rank, "realistic").slice(0, 80), rank);
+  renderTable(els.reachTable, sortRowsForTable(reaches, rank, "reach").slice(0, 60), rank);
+  updateSortButtons();
   renderChips();
   renderSelected(rank);
   renderBranchMix(realistic);
+}
+
+function sortRowsForTable(rows, rank, tableName) {
+  const withSortValues = rows.map((row) => {
+    const rowMargin = margin(row, rank);
+    return {
+      ...row,
+      margin: rowMargin,
+      chance: classifyChance(rowMargin),
+      score: sortValue(row, rank),
+    };
+  });
+  return sortTableRows(withSortValues, state.tableSort[tableName]);
+}
+
+function updateTableSort(tableName, key) {
+  const current = state.tableSort[tableName];
+  const nextDirection = current.key === key && current.direction === "asc" ? "desc" : "asc";
+  state.tableSort[tableName] = { key, direction: nextDirection };
+  render();
+}
+
+function updateSortButtons() {
+  document.querySelectorAll("[data-sort-table][data-sort-key]").forEach((button) => {
+    const current = state.tableSort[button.dataset.sortTable];
+    const active = current.key === button.dataset.sortKey;
+    button.classList.toggle("active", active);
+    button.textContent = `${button.dataset.sortLabel} ${active ? (current.direction === "asc" ? "↑" : "↓") : "↕"}`;
+    button.setAttribute("aria-sort", active ? (current.direction === "asc" ? "ascending" : "descending") : "none");
+  });
 }
 
 function currentRank() {

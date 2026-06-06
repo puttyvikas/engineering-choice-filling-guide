@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>IIT Choice Dashboard Guide</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell guide-shell">
+      <nav class="guide-nav">
+        <a href="./">Dashboard</a>
+        <span aria-hidden="true">|</span>
+        <a href="../../">Open v2</a>
+      </nav>
+      <article class="guide-page">
+        <p class="eyebrow">Dashboard Guide</p>
+        <h1>IIT Choice Dashboard Guide</h1>
+        <p class="context">
+          Use this page to understand the data source, filters, tables, and column meanings before filling JoSAA choices.
+        </p>
+
+        <h2>Data Source</h2>
+        <p>
+          The dashboard uses IIT-only data from <strong>IIT colleges.xlsx</strong>, processed into
+          <strong>data/iit_only_analysis.json</strong>. It includes only IIT rows where
+          <strong>Seat Type = SC</strong> and <strong>Gender = Gender-Neutral</strong>.
+        </p>
+
+        <h2>How To Use</h2>
+        <ol>
+          <li>Enter the candidate's SC rank in <strong>Candidate SC Rank</strong>.</li>
+          <li>Choose <strong>College first</strong>, <strong>Branch first</strong>, or <strong>Safety first</strong>.</li>
+          <li>Filter by chance, branch, college, search text, or BTech-only rows.</li>
+          <li>Use <strong>Add</strong> to compare options in the Selected Choices list.</li>
+        </ol>
+
+        <h2>Tables</h2>
+        <dl>
+          <dt>Top Realistic Options</dt>
+          <dd>Rows where Closing Rank is greater than or equal to the entered candidate rank.</dd>
+          <dt>Worthwhile Reaches</dt>
+          <dd>Rows that missed last year's cutoff, but may be worth placing above realistic choices.</dd>
+          <dt>Selected Choices</dt>
+          <dd>A temporary comparison list created by clicking Add. It does not modify source data.</dd>
+          <dt>Branch Mix</dt>
+          <dd>Counts visible realistic options by branch group after current filters.</dd>
+        </dl>
+
+        <h2>Column Glossary</h2>
+        <dl>
+          <dt>College</dt>
+          <dd>The IIT name.</dd>
+          <dt>Course</dt>
+          <dd>The academic program name, such as Electrical Engineering, Chemistry, or Design.</dd>
+          <dt>Branch</dt>
+          <dd>A simplified branch group used for filtering and comparison.</dd>
+          <dt>Opening Rank</dt>
+          <dd>The first rank allotted that program in the selected category and gender row.</dd>
+          <dt>Closing Rank</dt>
+          <dd>The last rank allotted that program in JoSAA 2025 Round 6 for the selected row.</dd>
+          <dt>Candidate Rank</dt>
+          <dd>The rank entered in the dashboard and used for recalculation.</dd>
+          <dt>Margin</dt>
+          <dd>Closing Rank minus Candidate Rank. Positive means inside last year's cutoff; negative means a reach.</dd>
+          <dt>Gap</dt>
+          <dd>The negative margin shown in the reach table.</dd>
+          <dt>Chance</dt>
+          <dd>Heuristic label based on margin: Likely, Good chance, Borderline, Close reach, Reach, or High reach.</dd>
+          <dt>Institute Score</dt>
+          <dd>Advisory score for IIT reputation used in sorting.</dd>
+          <dt>Branch Score</dt>
+          <dd>Advisory score for branch demand used in sorting.</dd>
+          <dt>Score</dt>
+          <dd>The active sorting score based on the chosen priority mode.</dd>
+          <dt>Recommendation Note</dt>
+          <dd>A short explanation to help interpret the row.</dd>
+        </dl>
+
+        <h2>Chance Labels</h2>
+        <table class="guide-table">
+          <thead>
+            <tr>
+              <th>Label</th>
+              <th>Margin Range</th>
+              <th>Meaning</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Likely</td><td>More than +600</td><td>Large cushion versus last year.</td></tr>
+            <tr><td>Good chance</td><td>+151 to +600</td><td>Reasonable cushion versus last year.</td></tr>
+            <tr><td>Borderline</td><td>0 to +150</td><td>Inside cutoff, but very close.</td></tr>
+            <tr><td>Close reach</td><td>-1 to -300</td><td>Missed last year's cutoff by a small gap.</td></tr>
+            <tr><td>Reach</td><td>-301 to -800</td><td>Meaningful gap versus last year.</td></tr>
+            <tr><td>High reach</td><td>Below -800</td><td>Large gap versus last year.</td></tr>
+          </tbody>
+        </table>
+
+        <h2>Counselling Note</h2>
+        <p>
+          JoSAA choices should generally be ordered by true preference, not probability. Put dream/reach
+          choices above realistic choices, and safe choices below them. JoSAA scans downward and gives the
+          highest available option.
+        </p>
+
+        <h2>Limitations</h2>
+        <p>
+          This is an advisory tool using JoSAA 2025 Round 6 data. It is not an official prediction.
+          Always verify final choices against official JoSAA 2026 data before submitting.
+        </p>
+      </article>
+    </main>
+  </body>
+</html>

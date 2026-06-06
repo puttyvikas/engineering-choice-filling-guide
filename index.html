@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>IIT Choice Dashboard</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="topbar">
+        <div>
+          <p class="eyebrow">JoSAA IIT Explorer</p>
+          <h1>IIT Choice Dashboard</h1>
+          <p class="context">
+            SC category, gender-neutral rows, JoSAA 2025 round 6. Adjust the rank and filters to explore realistic and reach options.
+          </p>
+          <p class="guide-link">
+            <a href="./guide.html">Read dashboard guide</a>
+            <span aria-hidden="true">|</span>
+            <a href="./versions/v1/">Open v1</a>
+          </p>
+        </div>
+        <div class="rank-card">
+          <label for="rankInput">Candidate SC Rank</label>
+          <input id="rankInput" type="number" min="1" step="1" value="1948" />
+        </div>
+      </section>
+
+      <section class="controls" aria-label="Dashboard controls">
+        <div class="control">
+          <label for="priorityMode">Priority</label>
+          <select id="priorityMode">
+            <option value="college">College first</option>
+            <option value="branch">Branch first</option>
+            <option value="safety">Safety first</option>
+          </select>
+        </div>
+        <div class="control multi-filter" data-filter="chance">
+          <span class="control-label">Chance</span>
+          <button id="chanceFilterButton" class="multi-button" type="button" aria-expanded="false">All chances</button>
+          <div id="chanceFilterPanel" class="multi-panel" hidden></div>
+        </div>
+        <div class="control multi-filter" data-filter="branch">
+          <span class="control-label">Branch</span>
+          <button id="branchFilterButton" class="multi-button" type="button" aria-expanded="false">All branches</button>
+          <div id="branchFilterPanel" class="multi-panel" hidden></div>
+        </div>
+        <div class="control multi-filter" data-filter="college">
+          <span class="control-label">College</span>
+          <button id="collegeFilterButton" class="multi-button" type="button" aria-expanded="false">All IITs</button>
+          <div id="collegeFilterPanel" class="multi-panel" hidden></div>
+        </div>
+        <div class="control search-control">
+          <label for="searchInput">Search</label>
+          <input id="searchInput" type="search" placeholder="Course or college" />
+        </div>
+        <label class="toggle">
+          <input id="showOnlyBtech" type="checkbox" />
+          <span>BTech only</span>
+        </label>
+      </section>
+
+      <section class="preset-row" aria-label="Quick presets">
+        <button type="button" data-preset="top-brand">Top IIT brand</button>
+        <button type="button" data-preset="circuit">Circuit branches</button>
+        <button type="button" data-preset="btech">BTech only</button>
+        <button type="button" data-preset="safe">Safe choices</button>
+        <button type="button" data-preset="close-reach">Close reaches</button>
+        <button type="button" data-preset="reset">Reset filters</button>
+      </section>
+
+      <section class="filter-legend" aria-label="Filter legend">
+        <span><i class="legend-dot branch-dot"></i> Branch filters</span>
+        <span><i class="legend-dot college-dot"></i> College filters</span>
+        <span><i class="legend-dot chance-dot"></i> Chance filters</span>
+      </section>
+
+      <section id="activeChips" class="active-chips" aria-label="Active filters"></section>
+
+      <section class="metrics" aria-label="Summary metrics">
+        <article>
+          <span>Realistic</span>
+          <strong id="realisticCount">0</strong>
+          <small>closing rank at or after entered rank</small>
+        </article>
+        <article>
+          <span>Borderline</span>
+          <strong id="borderlineCount">0</strong>
+          <small>within 150 ranks of cutoff</small>
+        </article>
+        <article>
+          <span>Close Reaches</span>
+          <strong id="reachCount">0</strong>
+          <small>missed by 300 ranks or less</small>
+        </article>
+        <article>
+          <span>Best Realistic</span>
+          <strong id="bestRealistic">-</strong>
+          <small id="bestRealisticCourse">No matching option</small>
+        </article>
+      </section>
+
+      <section class="insights-grid">
+        <article class="panel">
+          <div class="panel-header">
+            <h2>Top Realistic Options</h2>
+            <span id="realisticLabel">0 rows</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>College</th>
+                  <th>Course</th>
+                  <th>Branch</th>
+                  <th>Closing</th>
+                  <th>Margin</th>
+                  <th>Chance</th>
+                  <th>Score</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="realisticTable"></tbody>
+            </table>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-header">
+            <h2>Worthwhile Reaches</h2>
+            <span id="reachLabel">0 rows</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>College</th>
+                  <th>Course</th>
+                  <th>Branch</th>
+                  <th>Closing</th>
+                  <th>Gap</th>
+                  <th>Chance</th>
+                  <th>Score</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="reachTable"></tbody>
+            </table>
+          </div>
+        </article>
+      </section>
+
+      <section class="lower-grid">
+        <article class="panel">
+          <div class="panel-header">
+            <h2>Selected Choices <span id="selectedCount" class="inline-count">0</span></h2>
+            <div class="panel-actions">
+              <button id="copySelected" type="button">Copy list</button>
+              <button id="downloadSelected" type="button">Download CSV</button>
+              <button id="clearSelected" type="button">Clear</button>
+            </div>
+          </div>
+          <ol id="selectedList" class="selected-list"></ol>
+        </article>
+
+        <article class="panel">
+          <div class="panel-header">
+            <h2>Branch Mix</h2>
+            <span id="branchMixLabel">Visible realistic options</span>
+          </div>
+          <div id="branchMix" class="branch-mix"></div>
+        </article>
+      </section>
+    </main>
+
+    <template id="emptyRowTemplate">
+      <tr>
+        <td colspan="8" class="empty">No options match these filters.</td>
+      </tr>
+    </template>
+
+    <script src="./app.js" type="module"></script>
+  </body>
+</html>

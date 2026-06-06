@@ -659,13 +659,60 @@ tbody tr:hover {
   color: var(--muted);
 }
 
-.remove-choice {
+.choice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
   margin-top: 8px;
+}
+
+.move-choice,
+.remove-choice {
   border: 1px solid var(--line);
   background: #fff;
-  color: var(--bad);
+  color: var(--accent-strong);
   padding: 5px 8px;
   cursor: pointer;
+}
+
+.move-choice:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.move-position {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 28px;
+  border: 1px solid var(--line);
+  background: #fff;
+  padding: 3px 6px;
+  color: var(--ink);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.move-position span {
+  color: var(--muted);
+}
+
+.move-position input {
+  width: 42px;
+  min-height: 24px;
+  border: 0;
+  border-left: 1px solid var(--line);
+  padding-left: 6px;
+  color: var(--ink);
+  font: inherit;
+  outline-color: var(--accent);
+}
+
+.remove-choice {
+  color: var(--bad);
 }
 
 .branch-mix {

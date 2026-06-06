@@ -3,6 +3,7 @@ import { loadSelectedIds, saveSelectedIds } from "./selectionStorage.js";
 import { CHANCE_LABELS, classifyChance, confidenceScore } from "./admissionModel.js";
 import { bufferVisualClass } from "./bufferVisuals.js";
 import { isBtechCourse, isFiveYearDualDegreeCourse } from "./courseFilters.js";
+import { moveSelectedId, selectedRowsInOrder } from "./selectedOrder.js";
 
 const DATA_URL = "./data/iit_only_analysis.json";
 const DEFAULT_RANK = 1948;
@@ -302,10 +303,7 @@ function toggleSelected(id) {
 
 function renderSelected(rank) {
   els.selectedList.innerHTML = "";
-  const selected = [...state.selectedIds]
-    .map((id) => state.rows.find((row) => row.id === id))
-    .filter(Boolean)
-    .toSorted((a, b) => sortValue(b, rank) - sortValue(a, rank));
+  const selected = selectedRowsInOrder(state.selectedIds, state.rows);
   els.selectedCount.textContent = selected.length;
 
   if (selected.length === 0) {
@@ -321,16 +319,34 @@ function renderSelected(rank) {
     li.innerHTML = `
       <strong>${index + 1}. ${escapeHtml(row.college)} - ${escapeHtml(trimCourse(row.course))}</strong>
       <small>${row.branch} | closing ${row.closing} | margin ${formatMargin(rowMargin)} | ${classifyChance(rowMargin)} | buffer ${confidenceScore(rowMargin)}%</small>
-      <br />
-      <button class="remove-choice" type="button">Remove</button>
+      <div class="choice-actions">
+        <button class="move-choice" type="button" data-action="up" ${index === 0 ? "disabled" : ""}>Up</button>
+        <button class="move-choice" type="button" data-action="down" ${index === selected.length - 1 ? "disabled" : ""}>Down</button>
+        <label class="move-position">
+          <span>Move to</span>
+          <input type="number" min="1" max="${selected.length}" value="${index + 1}" />
+        </label>
+        <button class="remove-choice" type="button">Remove</button>
+      </div>
     `;
-    li.querySelector("button").addEventListener("click", () => {
+    li.querySelector('[data-action="up"]').addEventListener("click", () => reorderSelected(row.id, index - 1));
+    li.querySelector('[data-action="down"]').addEventListener("click", () => reorderSelected(row.id, index + 1));
+    li.querySelector(".move-position input").addEventListener("change", (event) => {
+      reorderSelected(row.id, Number(event.target.value) - 1);
+    });
+    li.querySelector(".remove-choice").addEventListener("click", () => {
       state.selectedIds.delete(row.id);
       saveSelectedIds(state.selectedIds);
       render();
     });
     els.selectedList.append(li);
   });
+}
+
+function reorderSelected(id, targetIndex) {
+  state.selectedIds = moveSelectedId(state.selectedIds, id, targetIndex);
+  saveSelectedIds(state.selectedIds);
+  render();
 }
 
 function renderChips() {
@@ -469,10 +485,7 @@ function applyPreset(preset) {
 }
 
 function selectedRows(rank = currentRank()) {
-  return [...state.selectedIds]
-    .map((id) => state.rows.find((row) => row.id === id))
-    .filter(Boolean)
-    .toSorted((a, b) => sortValue(b, rank) - sortValue(a, rank));
+  return selectedRowsInOrder(state.selectedIds, state.rows);
 }
 
 async function copySelectedChoices() {

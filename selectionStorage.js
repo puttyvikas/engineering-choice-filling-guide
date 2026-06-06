@@ -1,4 +1,4 @@
-export const SELECTED_CHOICES_STORAGE_KEY = "iit-choice-dashboard:selected-ids:v1";
+export const SELECTED_CHOICES_STORAGE_KEY = "iit-choice-dashboard:selected-ids";
 
 export function loadSelectedIds(storage = globalThis.localStorage) {
   try {

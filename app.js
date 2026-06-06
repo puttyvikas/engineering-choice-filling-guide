@@ -1,5 +1,8 @@
 import { sortTableRows } from "./tableSort.js";
 import { loadSelectedIds, saveSelectedIds } from "./selectionStorage.js";
+import { CHANCE_LABELS, classifyChance, confidenceScore } from "./admissionModel.js";
+import { bufferVisualClass } from "./bufferVisuals.js";
+import { isBtechCourse, isFiveYearDualDegreeCourse } from "./courseFilters.js";
 
 const DATA_URL = "./data/iit_only_analysis.json";
 const DEFAULT_RANK = 1948;
@@ -29,6 +32,7 @@ const els = {
   collegeFilterPanel: document.querySelector("#collegeFilterPanel"),
   searchInput: document.querySelector("#searchInput"),
   showOnlyBtech: document.querySelector("#showOnlyBtech"),
+  showOnlyDualDegree: document.querySelector("#showOnlyDualDegree"),
   activeChips: document.querySelector("#activeChips"),
   realisticCount: document.querySelector("#realisticCount"),
   borderlineCount: document.querySelector("#borderlineCount"),
@@ -79,7 +83,7 @@ function normalizeRow(row, index) {
 }
 
 function populateFilters(rows) {
-  renderMultiFilter("chance", ["Likely", "Good chance", "Borderline", "Close reach", "Reach", "High reach"]);
+  renderMultiFilter("chance", CHANCE_LABELS);
   renderMultiFilter(
     "branch",
     unique(rows.map((row) => row.branch)).sort(),
@@ -119,6 +123,7 @@ function bindEvents() {
     els.priorityMode,
     els.searchInput,
     els.showOnlyBtech,
+    els.showOnlyDualDegree,
   ].forEach((element) => element.addEventListener("input", render));
 
   ["chance", "branch", "college"].forEach((filterName) => {
@@ -194,6 +199,7 @@ function sortRowsForTable(rows, rank, tableName) {
       ...row,
       margin: rowMargin,
       chance: classifyChance(rowMargin),
+      confidence: confidenceScore(rowMargin),
       score: sortValue(row, rank),
     };
   });
@@ -227,7 +233,8 @@ function filteredRows(rank) {
 
   return state.rows.filter((row) => {
     const rowChance = classifyChance(margin(row, rank));
-    const btechOk = !els.showOnlyBtech.checked || row.course.toLowerCase().includes("bachelor of technology");
+    const btechOk = !els.showOnlyBtech.checked || isBtechCourse(row.course);
+    const dualDegreeOk = !els.showOnlyDualDegree.checked || isFiveYearDualDegreeCourse(row.course);
     const chanceOk = state.filters.chance.size === 0 || state.filters.chance.has(rowChance);
     const branchOk = state.filters.branch.size === 0 || state.filters.branch.has(row.branch);
     const collegeOk = state.filters.college.size === 0 || state.filters.college.has(row.college);
@@ -236,7 +243,7 @@ function filteredRows(rank) {
       row.course.toLowerCase().includes(query) ||
       row.college.toLowerCase().includes(query);
 
-    return btechOk && chanceOk && branchOk && collegeOk && searchOk;
+    return btechOk && dualDegreeOk && chanceOk && branchOk && collegeOk && searchOk;
   });
 }
 
@@ -252,26 +259,8 @@ function sortValue(row, rank) {
   return row.instituteScore * 0.72 + row.branchScore * 0.2 + confidence * 0.08;
 }
 
-function confidenceScore(rowMargin) {
-  if (rowMargin < -800) return 5;
-  if (rowMargin < -300) return 20;
-  if (rowMargin < 0) return 38;
-  if (rowMargin <= 150) return 55;
-  if (rowMargin <= 600) return 75;
-  return 92;
-}
-
 function margin(row, rank) {
   return row.closing - rank;
-}
-
-function classifyChance(rowMargin) {
-  if (rowMargin < -800) return "High reach";
-  if (rowMargin < -300) return "Reach";
-  if (rowMargin < 0) return "Close reach";
-  if (rowMargin <= 150) return "Borderline";
-  if (rowMargin <= 600) return "Good chance";
-  return "Likely";
 }
 
 function renderTable(target, rows, rank) {
@@ -291,7 +280,8 @@ function renderTable(target, rows, rank) {
       <td><span class="pill">${escapeHtml(row.branch)}</span></td>
       <td>${row.closing}</td>
       <td class="${rowMargin >= 0 ? "margin-positive" : "margin-negative"}">${formatMargin(rowMargin)}</td>
-      <td><span class="pill ${chanceClass(chance)}">${chance}</span></td>
+      <td><span class="pill buffer-pill ${bufferVisualClass(chance)}">${chance}</span></td>
+      <td><span class="confidence ${bufferVisualClass(chance)}">${confidenceScore(rowMargin)}%</span></td>
       <td>${sortValue(row, rank).toFixed(1)}</td>
       <td><button class="select-btn ${state.selectedIds.has(row.id) ? "active" : ""}" type="button" data-id="${escapeHtml(row.id)}">${state.selectedIds.has(row.id) ? "Added" : "Add"}</button></td>
     `;
@@ -330,7 +320,7 @@ function renderSelected(rank) {
     const li = document.createElement("li");
     li.innerHTML = `
       <strong>${index + 1}. ${escapeHtml(row.college)} - ${escapeHtml(trimCourse(row.course))}</strong>
-      <small>${row.branch} | closing ${row.closing} | margin ${formatMargin(rowMargin)} | ${classifyChance(rowMargin)}</small>
+      <small>${row.branch} | closing ${row.closing} | margin ${formatMargin(rowMargin)} | ${classifyChance(rowMargin)} | buffer ${confidenceScore(rowMargin)}%</small>
       <br />
       <button class="remove-choice" type="button">Remove</button>
     `;
@@ -353,6 +343,9 @@ function renderChips() {
   }
   if (els.showOnlyBtech.checked) {
     chips.push({ type: "btech", value: "BTech only" });
+  }
+  if (els.showOnlyDualDegree.checked) {
+    chips.push({ type: "dual", value: "5Y dual degree" });
   }
   if (els.searchInput.value.trim()) {
     chips.push({ type: "search", value: els.searchInput.value.trim() });
@@ -383,6 +376,8 @@ function removeChip(chip) {
     syncPanelCheckboxes(chip.type);
   } else if (chip.type === "btech") {
     els.showOnlyBtech.checked = false;
+  } else if (chip.type === "dual") {
+    els.showOnlyDualDegree.checked = false;
   } else if (chip.type === "search") {
     els.searchInput.value = "";
   }
@@ -392,6 +387,8 @@ function removeChip(chip) {
 
 function labelForFilter(type) {
   if (type === "btech") return "Type";
+  if (type === "dual") return "Type";
+  if (type === "chance") return "Cutoff";
   return type.charAt(0).toUpperCase() + type.slice(1);
 }
 
@@ -411,7 +408,7 @@ function closePanels() {
 }
 
 function updateFilterButtons() {
-  setButtonLabel("chance", "All chances");
+  setButtonLabel("chance", "All buffers");
   setButtonLabel("branch", "All branches");
   setButtonLabel("college", "All IITs");
 }
@@ -440,6 +437,7 @@ function clearFilters() {
   state.filters.college.clear();
   els.searchInput.value = "";
   els.showOnlyBtech.checked = false;
+  els.showOnlyDualDegree.checked = false;
   syncAllPanels();
 }
 
@@ -460,11 +458,11 @@ function applyPreset(preset) {
     els.showOnlyBtech.checked = true;
   }
   if (preset === "safe") {
-    ["Likely", "Good chance"].forEach((chance) => state.filters.chance.add(chance));
+    ["Large cutoff buffer", "Medium cutoff buffer"].forEach((chance) => state.filters.chance.add(chance));
     els.priorityMode.value = "safety";
   }
   if (preset === "close-reach") {
-    state.filters.chance.add("Close reach");
+    state.filters.chance.add("Small cutoff gap");
   }
   syncAllPanels();
   render();
@@ -484,7 +482,7 @@ async function copySelectedChoices() {
     ? rows
         .map((row, index) => {
           const rowMargin = margin(row, rank);
-          return `${index + 1}. ${row.college} - ${trimCourse(row.course)} | ${row.branch} | closing ${row.closing} | margin ${formatMargin(rowMargin)} | ${classifyChance(rowMargin)}`;
+          return `${index + 1}. ${row.college} - ${trimCourse(row.course)} | ${row.branch} | closing ${row.closing} | margin ${formatMargin(rowMargin)} | ${classifyChance(rowMargin)} | buffer ${confidenceScore(rowMargin)}%`;
         })
         .join("\n")
     : "No choices selected.";
@@ -498,10 +496,10 @@ async function copySelectedChoices() {
 function downloadSelectedChoices() {
   const rank = currentRank();
   const rows = selectedRows(rank);
-  const header = ["Order", "College", "Course", "Branch", "Closing Rank", "Margin", "Chance"];
+  const header = ["Order", "College", "Course", "Branch", "Closing Rank", "Margin", "Cutoff Buffer", "Buffer %"];
   const body = rows.map((row, index) => {
     const rowMargin = margin(row, rank);
-    return [index + 1, row.college, trimCourse(row.course), row.branch, row.closing, rowMargin, classifyChance(rowMargin)];
+    return [index + 1, row.college, trimCourse(row.course), row.branch, row.closing, rowMargin, classifyChance(rowMargin), `${confidenceScore(rowMargin)}%`];
   });
   const csv = [header, ...body].map((line) => line.map(csvCell).join(",")).join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
@@ -543,15 +541,6 @@ function renderBranchMix(realistic) {
     `;
     els.branchMix.append(div);
   }
-}
-
-function chanceClass(chance) {
-  if (chance === "Likely") return "chance-likely";
-  if (chance === "Good chance") return "chance-good";
-  if (chance === "Borderline") return "chance-borderline";
-  if (chance === "Close reach") return "chance-reach";
-  if (chance === "Reach") return "chance-reach";
-  return "chance-high";
 }
 
 function trimCourse(course) {

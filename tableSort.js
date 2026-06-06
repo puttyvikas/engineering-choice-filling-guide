@@ -9,6 +9,7 @@ export function sortTableRows(rows, sort) {
 
 function valueForSort(row, key) {
   if (key === "score") return Number(row.score);
+  if (key === "confidence") return Number(row.confidence);
   if (key === "closing") return Number(row.closing);
   if (key === "margin") return Number(row.margin);
   if (key === "chance") return chanceRank(row.chance);
@@ -24,12 +25,12 @@ function compareValues(a, b) {
 
 function chanceRank(chance) {
   const order = {
-    Likely: 1,
-    "Good chance": 2,
-    Borderline: 3,
-    "Close reach": 4,
-    Reach: 5,
-    "High reach": 6,
+    "Large cutoff buffer": 1,
+    "Medium cutoff buffer": 2,
+    "Small cutoff buffer": 3,
+    "Small cutoff gap": 4,
+    "Medium cutoff gap": 5,
+    "Large cutoff gap": 6,
   };
   return order[chance] || 99;
 }

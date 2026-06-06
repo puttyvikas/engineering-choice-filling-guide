@@ -5,7 +5,7 @@ Saved on: 2026-06-06
 ## Source
 
 - Data source: `IIT colleges.xlsx`
-- Processed source: `data/iit_only_analysis.json`
+- Processed source: `analysis_build/iit_only_analysis.json`
 - Scope: IIT-only, SC, Gender-Neutral rows
 
 ## Features
@@ -13,7 +13,7 @@ Saved on: 2026-06-06
 - Candidate SC rank input
 - Multi-select chance, branch, and college filters
 - Active filter chips with one-click removal
-- Quick presets: Top IIT brand, Circuit branches, BTech only, Safe choices, Close reaches, Reset filters
+- Quick presets: Top IIT brand, Circuit branches, BTech only, Safe choices, Cutoff gaps, Reset filters
 - Search and BTech-only toggle
 - College-first, branch-first, and safety-first sorting
 - Top Realistic Options table

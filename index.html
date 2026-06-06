@@ -18,8 +18,6 @@
           </p>
           <p class="guide-link">
             <a href="./guide.html">Read dashboard guide</a>
-            <span aria-hidden="true">|</span>
-            <a href="../dashboard_versions/v1/">Open v1</a>
           </p>
         </div>
         <div class="rank-card">
@@ -38,8 +36,8 @@
           </select>
         </div>
         <div class="control multi-filter" data-filter="chance">
-          <span class="control-label">Chance</span>
-          <button id="chanceFilterButton" class="multi-button" type="button" aria-expanded="false">All chances</button>
+          <span class="control-label">Cutoff buffer</span>
+          <button id="chanceFilterButton" class="multi-button" type="button" aria-expanded="false">All buffers</button>
           <div id="chanceFilterPanel" class="multi-panel" hidden></div>
         </div>
         <div class="control multi-filter" data-filter="branch">
@@ -60,6 +58,10 @@
           <input id="showOnlyBtech" type="checkbox" />
           <span>BTech only</span>
         </label>
+        <label class="toggle">
+          <input id="showOnlyDualDegree" type="checkbox" />
+          <span>5Y dual</span>
+        </label>
       </section>
 
       <section class="preset-row" aria-label="Quick presets">
@@ -67,14 +69,14 @@
         <button type="button" data-preset="circuit">Circuit branches</button>
         <button type="button" data-preset="btech">BTech only</button>
         <button type="button" data-preset="safe">Safe choices</button>
-        <button type="button" data-preset="close-reach">Close reaches</button>
+        <button type="button" data-preset="close-reach">Cutoff gaps</button>
         <button type="button" data-preset="reset">Reset filters</button>
       </section>
 
       <section class="filter-legend" aria-label="Filter legend">
         <span><i class="legend-dot branch-dot"></i> Branch filters</span>
         <span><i class="legend-dot college-dot"></i> College filters</span>
-        <span><i class="legend-dot chance-dot"></i> Chance filters</span>
+        <span><i class="legend-dot chance-dot"></i> Cutoff buffer filters</span>
       </section>
 
       <section id="activeChips" class="active-chips" aria-label="Active filters"></section>
@@ -86,12 +88,12 @@
           <small>closing rank at or after entered rank</small>
         </article>
         <article>
-          <span>Borderline</span>
+          <span>Small Buffer</span>
           <strong id="borderlineCount">0</strong>
           <small>within 150 ranks of cutoff</small>
         </article>
         <article>
-          <span>Close Reaches</span>
+          <span>Small Gaps</span>
           <strong id="reachCount">0</strong>
           <small>missed by 300 ranks or less</small>
         </article>
@@ -117,7 +119,8 @@
                   <th><button class="sort-toggle" type="button" data-sort-table="realistic" data-sort-key="branch" data-sort-label="Branch">Branch</button></th>
                   <th><button class="sort-toggle" type="button" data-sort-table="realistic" data-sort-key="closing" data-sort-label="Closing">Closing</button></th>
                   <th><button class="sort-toggle" type="button" data-sort-table="realistic" data-sort-key="margin" data-sort-label="Margin">Margin</button></th>
-                  <th><button class="sort-toggle" type="button" data-sort-table="realistic" data-sort-key="chance" data-sort-label="Chance">Chance</button></th>
+                  <th><button class="sort-toggle" type="button" data-sort-table="realistic" data-sort-key="chance" data-sort-label="Cutoff buffer">Cutoff buffer</button></th>
+                  <th><button class="sort-toggle" type="button" data-sort-table="realistic" data-sort-key="confidence" data-sort-label="Buffer %">Buffer %</button></th>
                   <th><button class="sort-toggle" type="button" data-sort-table="realistic" data-sort-key="score" data-sort-label="Score">Score</button></th>
                   <th></th>
                 </tr>
@@ -141,7 +144,8 @@
                   <th><button class="sort-toggle" type="button" data-sort-table="reach" data-sort-key="branch" data-sort-label="Branch">Branch</button></th>
                   <th><button class="sort-toggle" type="button" data-sort-table="reach" data-sort-key="closing" data-sort-label="Closing">Closing</button></th>
                   <th><button class="sort-toggle" type="button" data-sort-table="reach" data-sort-key="margin" data-sort-label="Gap">Gap</button></th>
-                  <th><button class="sort-toggle" type="button" data-sort-table="reach" data-sort-key="chance" data-sort-label="Chance">Chance</button></th>
+                  <th><button class="sort-toggle" type="button" data-sort-table="reach" data-sort-key="chance" data-sort-label="Cutoff gap">Cutoff gap</button></th>
+                  <th><button class="sort-toggle" type="button" data-sort-table="reach" data-sort-key="confidence" data-sort-label="Buffer %">Buffer %</button></th>
                   <th><button class="sort-toggle" type="button" data-sort-table="reach" data-sort-key="score" data-sort-label="Score">Score</button></th>
                   <th></th>
                 </tr>
@@ -177,7 +181,7 @@
 
     <template id="emptyRowTemplate">
       <tr>
-        <td colspan="8" class="empty">No options match these filters.</td>
+        <td colspan="9" class="empty">No options match these filters.</td>
       </tr>
     </template>
 

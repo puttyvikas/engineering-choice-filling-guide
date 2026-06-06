@@ -7,7 +7,7 @@ This dashboard helps explore IIT choices for a male SC candidate using JoSAA 202
 The dashboard uses:
 
 - Source workbook: `IIT colleges.xlsx`
-- Processed data: `data/iit_only_analysis.json`
+- Processed data: `analysis_build/iit_only_analysis.json`
 - Rows included: IIT colleges only
 - Seat type/category: `SC`
 - Gender rows: `Gender-Neutral`
@@ -17,7 +17,7 @@ It does not use NIT, IIIT, or other institute rows.
 ## How To Use
 
 1. Open the dashboard:
-   local deploy preview URL or Vercel production URL
+   `http://localhost:8765/dashboard/`
 
 2. Enter the candidate's SC rank in `Candidate SC Rank`.
    The dashboard recalculates margins and chance labels immediately.
@@ -33,6 +33,7 @@ It does not use NIT, IIIT, or other institute rows.
    - `College`: choose one or more IITs.
    - `Search`: search by college or course name.
    - `BTech only`: hide BS, dual-degree science, architecture, and other non-BTech rows.
+   - `5Y dual`: show only courses whose name includes both 5 Years and Dual Degree.
 
 5. Use active filter chips to remove individual filters quickly.
 
@@ -40,8 +41,9 @@ It does not use NIT, IIIT, or other institute rows.
    - `Top IIT brand`: focuses on older/top IITs and uses college-first sorting.
    - `Circuit branches`: focuses on CSE, AI/Data, Math/Computing, Electronics, and Electrical.
    - `BTech only`: enables BTech-only rows.
+   - `5Y dual`: filters to 5-year Dual Degree rows.
    - `Safe choices`: shows likely and good-chance rows.
-   - `Close reaches`: shows close-reach rows.
+   - `Cutoff gaps`: shows rows with small cutoff gaps.
    - `Reset filters`: clears all filters.
 
 7. Use `Add` to place options into the `Selected Choices` list for comparison.
@@ -163,18 +165,18 @@ In the reach table, the margin is shown as a gap.
 
 Negative gap means the candidate rank is worse than last year's closing rank.
 
-### Chance
+### Cutoff Buffer / Gap
 
-A simple label based on margin:
+A simple label based on margin. Buffer means the candidate rank is inside last year's closing rank; gap means it missed last year's closing rank.
 
-- `Likely`: margin greater than 600
-- `Good chance`: margin from 151 to 600
-- `Borderline`: margin from 0 to 150
-- `Close reach`: margin from -1 to -300
-- `Reach`: margin from -301 to -800
-- `High reach`: margin below -800
+- `Large cutoff buffer`: margin greater than 600, buffer 92%
+- `Medium cutoff buffer`: margin from 151 to 600, buffer 75%
+- `Small cutoff buffer`: margin from 0 to 150, buffer 55%
+- `Small cutoff gap`: margin from -1 to -300, buffer 35%
+- `Medium cutoff gap`: margin from -301 to -800, buffer 20%
+- `Large cutoff gap`: margin below -800, buffer 5%
 
-These labels are only heuristic. They are not official predictions.
+The buffer percentage is based only on previous-year cutoff margin. It is not an official JoSAA probability.
 
 ### Institute Score
 
